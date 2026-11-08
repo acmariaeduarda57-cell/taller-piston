@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller El Pistón</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.5/dist/pocketbase.umd.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Taller El Pistón</h1>
+        <nav>
+            <button class="nav-btn active" data-view="ordenes">Órdenes</button>
+            <button class="nav-btn" data-view="inventario">Inventario</button>
+            <button class="nav-btn" data-view="nuevo-ingreso">Nuevo Ingreso</button>
+            <button class="nav-btn" data-view="reportes">Reportes</button>
+        </nav>
+                <span style="font-size: 0.8rem; color: var(--text-muted); margin-right: 1rem;">v1.0 - Sistema de Gestión</span>
+        <button id="btn-tema" class="btn-tema">Modo Oscuro</button>
+    </header>
+
+    <main>
+        <!-- VISTA 1: ÓRDENES -->
+        <section id="vista-ordenes" class="vista activa">
+            <div class="vista-header">
+                <h2>Órdenes Abiertas</h2>
+                <label class="toggle-ver">
+                    <input type="checkbox" id="chk-ver-todas"> Ver todas (incluir entregadas)
+                </label>
+            </div>
+            <div id="lista-ordenes" class="grid"></div>
+        </section>
+
+        <!-- VISTA 2: INVENTARIO -->
+        <section id="vista-inventario" class="vista">
+            <h2>Inventario de Repuestos</h2>
+            <div id="lista-repuestos" class="grid"></div>
+        </section>
+
+        <!-- VISTA 3: NUEVO INGRESO -->
+        <section id="vista-nuevo-ingreso" class="vista">
+            <h2>Registrar Nuevo Ingreso</h2>
+            <form id="form-ingreso">
+                <fieldset>
+                    <legend>Datos del Cliente</legend>
+                    <input type="text" id="cli-nombre" placeholder="Nombre del cliente" required>
+                    <input type="text" id="cli-telefono" placeholder="Teléfono" required>
+                    <input type="text" id="cli-direccion" placeholder="Dirección (Opcional)">
+                </fieldset>
+                <fieldset>
+                    <legend>Datos del Vehículo</legend>
+                    <input type="text" id="veh-matricula" placeholder="Matrícula" required>
+                    <input type="text" id="veh-marca" placeholder="Marca" required>
+                    <input type="text" id="veh-modelo" placeholder="Modelo">
+                    <input type="number" id="veh-anio" placeholder="Año">
+                    <input type="number" id="veh-km" placeholder="Kilometraje">
+                </fieldset>
+                <fieldset>
+                    <legend>Orden de Servicio</legend>
+                    <textarea id="ord-problema" placeholder="Problema reportado por el cliente" required></textarea>
+                    <input type="text" id="ord-mecanico" placeholder="Asignar a Mecánico (ej. Pedro)">
+                </fieldset>
+                <button type="submit" class="btn principal">Crear Orden</button>
+                <p id="mensaje-form" class="mensaje"></p>
+            </form>
+        </section>
+
+        <!-- VISTA 4: REPORTES -->
+        <section id="vista-reportes" class="vista">
+            <h2>Reportes del Taller</h2>
+            <div class="grid-reportes">
+                <div class="card reporte-card">
+                    <h3>🚗 Carga por Mecánico</h3>
+                    <div id="rep-mecanicos"></div>
+                </div>
+                <div class="card reporte-card">
+                    <h3>💰 Clientes con Deuda</h3>
+                    <div id="rep-deudas"></div>
+                </div>
+                <div class="card reporte-card">
+                    <h3>📦 Repuestos por Agotarse</h3>
+                    <div id="rep-stock"></div>
+                </div>
+                <div class="card reporte-card">
+                    <h3>📊 Facturación (Total Histórico)</h3>
+                    <div id="rep-facturacion">
+                        <p style="font-size: 2rem; font-weight: bold; color: var(--primary);">$0.00</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">Suma de mano de obra y repuestos</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODAL: DETALLE DE ORDEN -->
+    <div id="modal-detalle" class="modal oculto">
+        <div class="modal-content largo">
+            <div class="modal-header">
+                <h2 id="detalle-titulo">Detalle de Orden</h2>
+                <button class="btn-cerrar" id="btn-cerrar-detalle">✖</button>
+            </div>
+            <div id="detalle-info"></div>
+
+            <fieldset>
+                <legend>Agregar Trabajo (Mano de obra)</legend>
+                <input type="text" id="trabajo-desc" placeholder="Descripción del trabajo">
+                <input type="number" id="trabajo-precio" placeholder="Precio $" step="0.01">
+                <button class="btn" id="btn-agregar-trabajo">Agregar Trabajo</button>
+            </fieldset>
+
+            <fieldset>
+                <legend>Agregar Repuesto Usado</legend>
+                <select id="repuesto-select"></select>
+                <input type="number" id="repuesto-cantidad" placeholder="Cantidad" min="1" value="1">
+                <button class="btn" id="btn-agregar-repuesto">Agregar Repuesto</button>
+            </fieldset>
+
+            <fieldset>
+                <legend>Registrar Pago</legend>
+                <input type="number" id="pago-monto" placeholder="Monto $" step="0.01">
+                <button class="btn" id="btn-agregar-pago">Registrar Pago</button>
+            </fieldset>
+
+            <div id="detalle-listas"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generar Datos de Prueba</title>
+    <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.5/dist/pocketbase.umd.js"></script>
+</head>
+<body>
+    <h1>Cargando datos de prueba...</h1>
+    <p id="log">Iniciando...</p>
+    <script>
+        const pb = new PocketBase('http://127.0.0.1:8090');
+        pb.autoCancellation(false);
+        const log = document.getElementById('log');
+
+        async function crearDatos() {
+            try {
+                log.textContent = '1. Creando repuestos...';
+                const repuestos = await Promise.all([
+                    pb.collection('repuestos').create({ nombre: 'Filtro de Aceite', codigo: 'FIL-01', precio_venta: 15, existencias: 20 }),
+                    pb.collection('repuestos').create({ nombre: 'Pastillas de Freno', codigo: 'PAS-02', precio_venta: 45, existencias: 3 }), // Bajo stock
+                    pb.collection('repuestos').create({ nombre: 'Bujía', codigo: 'BUJ-03', precio_venta: 8, existencias: 50 }),
+                    pb.collection('repuestos').create({ nombre: 'Correa de Distribución', codigo: 'COR-04', precio_venta: 80, existencias: 2 }) // Bajo stock
+                ]);
+
+                log.textContent = '2. Creando clientes...';
+                const c1 = await pb.collection('clientes').create({ nombre: 'María López', telefono: '555-1111', direccion: 'Calle 1' });
+                const c2 = await pb.collection('clientes').create({ nombre: 'Carlos Ruiz', telefono: '555-2222', direccion: 'Calle 2' });
+                const c3 = await pb.collection('clientes').create({ nombre: 'Ana Torres', telefono: '555-3333', direccion: 'Calle 3' });
+
+                log.textContent = '3. Creando vehículos...';
+                const v1 = await pb.collection('vehiculos').create({ matricula: 'XYZ-987', marca: 'Honda', modelo: 'Civic', anio: 2018, kilometraje: 80000, cliente: c1.id });
+                const v2 = await pb.collection('vehiculos').create({ matricula: 'JKL-456', marca: 'Ford', modelo: 'Focus', anio: 2020, kilometraje: 40000, cliente: c2.id });
+                const v3 = await pb.collection('vehiculos').create({ matricula: 'MNO-123', marca: 'Nissan', modelo: 'Sentra', anio: 2015, kilometraje: 120000, cliente: c3.id });
+
+                log.textContent = '4. Creando órdenes...';
+                // Orden 1: Abierta, en reparación, asignada a Pedro
+                const o1 = await pb.collection('ordenes').create({
+                    problema: 'Cambio de frenos delanteros', estado: 'en reparación', fecha_entrada: new Date().toISOString(), mecanico: 'Pedro', vehiculo: v1.id
+                });
+                // Orden 2: Abierta, en diagnóstico, asignada a Pedro
+                const o2 = await pb.collection('ordenes').create({
+                    problema: 'Revisión de motor y bujías', estado: 'en diagnóstico', fecha_entrada: new Date().toISOString(), mecanico: 'Pedro', vehiculo: v2.id
+                });
+                // Orden 3: Abierta, recibida, asignada a Luis
+                const o3 = await pb.collection('ordenes').create({
+                    problema: 'Alineación y balanceo', estado: 'recibida', fecha_entrada: new Date().toISOString(), mecanico: 'Luis', vehiculo: v3.id
+                });
+                // Orden 4: Entregada (para el historial)
+                const o4 = await pb.collection('ordenes').create({
+                    problema: 'Cambio de aceite anterior', estado: 'entregada', fecha_entrada: new Date(Date.now() - 86400000).toISOString(), mecanico: 'Luis', vehiculo: v1.id
+                });
+
+                log.textContent = '5. Creando trabajos y repuestos...';
+                // Trabajos
+                await pb.collection('trabajos').create({ descripcion: 'Mano de obra frenos', precio: 100, orden: o1.id });
+                await pb.collection('trabajos').create({ descripcion: 'Diagnóstico computarizado', precio: 50, orden: o2.id });
+                await pb.collection('trabajos').create({ descripcion: 'Alineación', precio: 60, orden: o3.id });
+                
+                // Repuestos usados (esto bajará el stock automáticamente)
+                await pb.collection('repuestos_usados').create({ cantidad: 1, orden: o1.id, repuesto: repuestos[1].id }); // Usa pastillas de freno
+                await pb.collection('repuestos_usados').create({ cantidad: 4, orden: o2.id, repuesto: repuestos[2].id }); // Usa 4 bujías
+
+                log.textContent = '6. Creando pagos...';
+                // Pago parcial para la orden 1
+                await pb.collection('pagos').create({ monto: 50, fecha: new Date().toISOString(), orden: o1.id });
+                // Pago total para la orden 4 (la entregada)
+                await pb.collection('pagos').create({ monto: 150, fecha: new Date(Date.now() - 86400000).toISOString(), orden: o4.id });
+
+                log.innerHTML = '<b style="color: green;">¡Datos de prueba creados con éxito!</b> Ya puedes cerrar esta pestaña y volver al sistema principal.';
+                log.style.color = 'green';
+            } catch (error) {
+                console.error(error);
+                log.textContent = 'Error: ' + error.message;
+                log.style.color = 'red';
+            }
+        }
+
+        crearDatos();
+    </script>
+</body>
+</html>
